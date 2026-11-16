@@ -60,11 +60,27 @@
   .barra i { display: block; height: 100%; width: 0; background: var(--ouro); transition: width .3s; }
   .ok { color: var(--ok); font-weight: 600; }
   .falhou { color: var(--erro); font-weight: 600; }
+  .dica { color: var(--suave); font-size: .9rem; margin: -4px 0 12px; }
+  details.cartao > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; min-height: 64px; -webkit-tap-highlight-color: transparent; }
+  details.cartao > summary::-webkit-details-marker { display: none; }
+  details.cartao > summary:focus-visible { outline: 2px solid var(--rose); outline-offset: -2px; border-radius: 14px; }
+  summary .cabeca { flex: 1; min-width: 0; }
+  summary .resumo { color: var(--suave); font-size: .85rem; margin-top: 2px; }
+  summary .seta { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--fundo); color: var(--rose-escuro); transition: transform .2s; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) summary .seta { color: #E7B7CB; } }
+  details[open] > summary .seta { transform: rotate(180deg); }
+  details[open] > summary { border-bottom: 1px solid var(--linha); }
+  .tipo { padding: 10px 16px 4px; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--suave); background: var(--fundo); border-top: 1px solid var(--linha); }
+  details > .tipo:first-of-type { border-top: 0; }
   .rodape { text-align: center; color: var(--suave); font-size: .82rem; margin-top: 30px; }
   @media (max-width: 480px) {
-    li { flex-wrap: wrap; }
-    .botoes { width: 100%; }
-    .botoes .botao { flex: 1; }
+    li { padding: 10px 12px 10px 16px; gap: 8px; }
+    .nome span { font-size: .78rem; }
+    .botoes { gap: 6px; }
+    .botoes .botao { min-height: 40px; padding: 0 12px; font-size: .88rem; }
   }
 </style>
 </head>
@@ -76,11 +92,6 @@
 <main>
   <div id="estado" class="aviso">Carregando…</div>
 
-  <section id="secao-prontos" hidden>
-    <h2>Prontos para postar</h2>
-    <div id="prontos"></div>
-  </section>
-
   <section id="secao-enviar" hidden>
     <h2>Enviar vídeos e fotos para edição</h2>
     <div class="cartao envio">
@@ -90,6 +101,12 @@
       <ul id="fila"></ul>
     </div>
     <div id="recebidos"></div>
+  </section>
+
+  <section id="secao-prontos" hidden>
+    <h2>Prontos para postar</h2>
+    <p class="dica">Toque no tema para ver os arquivos.</p>
+    <div id="prontos"></div>
   </section>
 
   <p class="rodape">Os links de download valem por 1 hora. Se um botão parar de funcionar, recarregue a página.<br>
@@ -159,26 +176,76 @@ function el(tag, attrs, filhos) {
   return e;
 }
 
+// Tipos de arquivo, na ordem em que aparecem dentro de cada tema.
+const TIPOS = [
+  { chave: "video", nome: "Vídeo", um: "vídeo", varios: "vídeos" },
+  { chave: "legenda", nome: "Legenda", um: "legenda", varios: "legendas" },
+  { chave: "carrossel", nome: "Carrossel", um: "slide", varios: "slides" },
+  { chave: "stories", nome: "Stories", um: "story", varios: "stories" },
+  { chave: "fotos", nome: "Fotos", um: "foto", varios: "fotos" },
+  { chave: "outros", nome: "Outros arquivos", um: "arquivo", varios: "arquivos" },
+];
+
+function tipoDoArquivo(a) {
+  const n = a.nome.toLowerCase(), c = (a.caminho || "").toLowerCase();
+  if (/\.(mp4|mov|m4v|webm)$/.test(n)) return "video";
+  if (/legenda/.test(n)) return "legenda";
+  if (/\/stories\//.test(c) || /^story/.test(n)) return "stories";
+  if (/^(capa|slide)/.test(n) || /\.pdf$/.test(n)) return "carrossel";
+  if (/\.(jpe?g|png|heic|webp)$/.test(n)) return "fotos";
+  return "outros";
+}
+
+const abertos = new Set(); // temas abertos, para não fechar tudo quando a lista recarrega
+
+function linhaDoArquivo(a, comBotaoVer) {
+  const botoes = el("div", { class: "botoes" }, [
+    comBotaoVer && a.ver ? el("a", { class: "botao claro", href: a.ver, target: "_blank", rel: "noopener", text: "Ver" }) : null,
+    a.baixar ? el("a", { class: "botao", href: a.baixar, download: a.nome, text: "Baixar" }) : null,
+  ]);
+  return el("li", {}, [
+    el("div", { class: "nome" }, [el("b", { text: rotuloArquivo(a) }), el("span", { text: a.nome + " · " + tamanho(a.tamanho) })]),
+    botoes,
+  ]);
+}
+
 function cartaoDoGrupo(g, comBotaoVer) {
   const { titulo, data } = tituloDoTrabalho(g.nome);
-  const lista = el("ul");
-  g.arquivos.slice().sort((a, b) => {
-    const p = (x) => /\.(mp4|mov|m4v)$/i.test(x.nome) ? 0 : /^capa/i.test(x.nome) ? 1 : /legenda/i.test(x.nome) ? 3 : 2;
-    return p(a) - p(b) || a.nome.localeCompare(b.nome, "pt-BR", { numeric: true });
-  }).forEach((a) => {
-    const botoes = el("div", { class: "botoes" }, [
-      comBotaoVer && a.ver ? el("a", { class: "botao claro", href: a.ver, target: "_blank", rel: "noopener", text: "Ver" }) : null,
-      a.baixar ? el("a", { class: "botao", href: a.baixar, download: a.nome, text: "Baixar" }) : null,
-    ]);
-    lista.appendChild(el("li", {}, [
-      el("div", { class: "nome" }, [el("b", { text: rotuloArquivo(a) }), el("span", { text: a.nome + " · " + tamanho(a.tamanho) })]),
-      botoes,
-    ]));
+  const chave = g.pasta + "/" + g.nome;
+  const porTipo = new Map(TIPOS.map((t) => [t.chave, []]));
+  g.arquivos.forEach((a) => porTipo.get(tipoDoArquivo(a)).push(a));
+  const ordem = (a, b) => (/^capa/i.test(a.nome) ? -1 : 0) - (/^capa/i.test(b.nome) ? -1 : 0)
+    || a.nome.localeCompare(b.nome, "pt-BR", { numeric: true });
+
+  const partes = [], resumo = [];
+  TIPOS.forEach((t) => {
+    const lista = porTipo.get(t.chave);
+    if (!lista.length) return;
+    if (t.chave === "carrossel") {
+      const slides = lista.filter((a) => /^slide/i.test(a.nome)).length;
+      if (slides) resumo.push(slides + " " + (slides === 1 ? t.um : t.varios));
+    } else {
+      resumo.push(lista.length + " " + (lista.length === 1 ? t.um : t.varios));
+    }
+    partes.push(el("div", { class: "tipo", text: t.nome }));
+    partes.push(el("ul", {}, lista.sort(ordem).map((a) => linhaDoArquivo(a, comBotaoVer))));
   });
-  return el("div", { class: "cartao" }, [
-    el("div", { class: "topo" }, [el("div", { class: "titulo", text: titulo }), data ? el("div", { class: "data", text: data }) : null]),
-    lista,
+  const total = g.arquivos.reduce((s, a) => s + (a.tamanho || 0), 0);
+  resumo.push(tamanho(total));
+
+  const caixa = el("details", { class: "cartao" }, [
+    el("summary", {}, [
+      el("div", { class: "cabeca" }, [
+        el("div", { class: "titulo", text: titulo }),
+        el("div", { class: "resumo", text: [data, resumo.join(" · ")].filter(Boolean).join(" — ") }),
+      ]),
+      el("span", { class: "seta", "aria-hidden": "true", text: "▾" }),
+    ]),
+    ...partes,
   ]);
+  if (abertos.has(chave)) caixa.open = true;
+  caixa.addEventListener("toggle", () => { caixa.open ? abertos.add(chave) : abertos.delete(chave); });
+  return caixa;
 }
 
 async function carregar() {
