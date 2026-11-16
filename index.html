@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#AE6989">
+<title>Entregas Dra. Juliana</title>
+<link rel="icon" href="icone.png">
+<link rel="apple-touch-icon" href="icone.png">
+<style>
+  :root {
+    --rose: #AE6989; --rose-escuro: #8E5070; --creme: #FFEFD2; --ouro: #C9A66B;
+    --fundo: #FBF7F2; --cartao: #FFFFFF; --texto: #2B2024; --suave: #75666C; --linha: #EADFD6;
+    --ok: #2F7D4F; --erro: #B3261E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fundo: #1C1618; --cartao: #282023; --texto: #F5ECEF; --suave: #BBA9B0; --linha: #3B3034;
+      --ok: #6CC28F; --erro: #FF8A80;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--fundo); color: var(--texto);
+    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  header { background: var(--rose); color: #fff; text-align: center;
+    padding: calc(20px + env(safe-area-inset-top)) 16px 22px; }
+  header img { width: 120px; height: auto; display: block; margin: 0 auto 8px; }
+  header h1 { font: 600 1.15rem/1.3 Georgia, "Times New Roman", serif; margin: 0; letter-spacing: .02em; }
+  main { max-width: 760px; margin: 0 auto; padding: 16px 16px calc(40px + env(safe-area-inset-bottom)); }
+  h2 { font: 600 1.1rem/1.3 Georgia, "Times New Roman", serif; margin: 28px 0 10px; color: var(--rose-escuro); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) h2 { color: #E7B7CB; } }
+  .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+  .cartao > .topo { padding: 14px 16px 6px; }
+  .titulo { font-weight: 650; font-size: 1.02rem; overflow-wrap: anywhere; }
+  .data { color: var(--suave); font-size: .88rem; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--linha); }
+  li:first-child { border-top: 0; }
+  .nome { flex: 1; min-width: 0; }
+  .nome b { display: block; font-weight: 550; overflow-wrap: anywhere; }
+  .nome span { color: var(--suave); font-size: .85rem; }
+  .botoes { display: flex; gap: 8px; flex-shrink: 0; }
+  a.botao, button.botao, label.botao {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px;
+    border-radius: 999px; border: 0; font: 600 .95rem/1 inherit; font-family: inherit; text-decoration: none; cursor: pointer;
+    background: var(--rose); color: #fff; -webkit-tap-highlight-color: transparent; }
+  a.botao.claro { background: transparent; color: var(--rose-escuro); border: 1.5px solid var(--rose); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) a.botao.claro { color: #E7B7CB; } }
+  a.botao:active, button.botao:active, label.botao:active { transform: scale(.97); }
+  .aviso { padding: 14px 16px; border-radius: 12px; background: var(--creme); color: #4A3A2A; margin: 12px 0; }
+  .aviso.erro { background: #FDE7E6; color: #7A1A14; }
+  .vazio { color: var(--suave); padding: 6px 2px 14px; }
+  .envio { padding: 16px; }
+  .envio p { margin: 0 0 12px; color: var(--suave); font-size: .92rem; }
+  input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .barra { height: 8px; border-radius: 99px; background: var(--linha); overflow: hidden; margin-top: 6px; }
+  .barra i { display: block; height: 100%; width: 0; background: var(--ouro); transition: width .3s; }
+  .ok { color: var(--ok); font-weight: 600; }
+  .falhou { color: var(--erro); font-weight: 600; }
+  .rodape { text-align: center; color: var(--suave); font-size: .82rem; margin-top: 30px; }
+  @media (max-width: 480px) {
+    li { flex-wrap: wrap; }
+    .botoes { width: 100%; }
+    .botoes .botao { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <img src="logo.png" alt="Dra. Juliana Girotto">
+  <h1>Seus conteúdos prontos</h1>
+</header>
+<main>
+  <div id="estado" class="aviso">Carregando…</div>
+
+  <section id="secao-prontos" hidden>
+    <h2>Prontos para postar</h2>
+    <div id="prontos"></div>
+  </section>
+
+  <section id="secao-enviar" hidden>
+    <h2>Enviar vídeos e fotos para edição</h2>
+    <div class="cartao envio">
+      <p>Escolha os vídeos brutos ou as fotos. Deixe esta tela aberta até aparecer “Enviado”.</p>
+      <label class="botao" for="arquivos">Escolher arquivos</label>
+      <input id="arquivos" type="file" multiple accept="video/*,image/*,audio/*,.pdf,.zip">
+      <ul id="fila"></ul>
+    </div>
+    <div id="recebidos"></div>
+  </section>
+
+  <p class="rodape">Os links de download valem por 1 hora. Se um botão parar de funcionar, recarregue a página.<br>
+  Os arquivos ficam aqui por 60 dias.</p>
+</main>
+<script>
+"use strict";
+const FUNCAO = "https://yxojdqmcpbcshvdousty.supabase.co/functions/v1/entregas-juliana";
+const $ = (s) => document.querySelector(s);
+let carregadoEm = 0;
+
+function lerCodigo() {
+  const m = location.hash.match(/[#&]c=([A-Za-z0-9_-]{32,200})/);
+  if (m) { try { localStorage.setItem("entregas-c", m[1]); } catch (e) {} return m[1]; }
+  try { return localStorage.getItem("entregas-c"); } catch (e) { return null; }
+}
+const CODIGO = lerCodigo();
+
+function aviso(texto, erro) {
+  const el = $("#estado");
+  el.hidden = !texto; el.textContent = texto || ""; el.className = "aviso" + (erro ? " erro" : "");
+}
+
+function tamanho(n) {
+  if (n >= 1073741824) return (n / 1073741824).toFixed(1).replace(".", ",") + " GB";
+  if (n >= 1048576) return (n / 1048576).toFixed(1).replace(".", ",") + " MB";
+  return Math.max(1, Math.round(n / 1024)) + " KB";
+}
+
+function tituloDoTrabalho(nome) {
+  const m = nome.match(/^(\d{4})-(\d{2})-(\d{2})-?(.*)$/);
+  if (!m) return { titulo: nome.replace(/-/g, " "), data: "" };
+  const t = m[4].replace(/-/g, " ").trim();
+  return { titulo: t ? t.charAt(0).toUpperCase() + t.slice(1) : "Envio", data: `${m[3]}/${m[2]}/${m[1]}` };
+}
+
+function rotuloArquivo(a) {
+  const n = a.nome.toLowerCase();
+  if (/\.(mp4|mov|m4v|webm)$/.test(n)) return "Vídeo";
+  if (/^capa/.test(n)) return "Capa";
+  if (/^slide-\d+/.test(n)) return "Slide " + parseInt(n.match(/\d+/)[0], 10);
+  if (/^story-\d+/.test(n)) return "Story " + parseInt(n.match(/\d+/)[0], 10);
+  if (/legenda/.test(n)) return "Legenda do post";
+  if (/\.pdf$/.test(n)) return "PDF";
+  if (/\.(jpe?g|png|heic|webp)$/.test(n)) return "Imagem";
+  return "Arquivo";
+}
+
+async function chamar(acao, dados) {
+  const r = await fetch(FUNCAO, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-codigo": CODIGO },
+    body: JSON.stringify(Object.assign({ acao }, dados || {})),
+  });
+  let corpo = {};
+  try { corpo = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error(corpo.erro || ("Erro " + r.status));
+  return corpo;
+}
+
+function el(tag, attrs, filhos) {
+  const e = document.createElement(tag);
+  for (const k in attrs || {}) {
+    if (k === "text") e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]);
+  }
+  (filhos || []).forEach((f) => f && e.appendChild(f));
+  return e;
+}
+
+function cartaoDoGrupo(g, comBotaoVer) {
+  const { titulo, data } = tituloDoTrabalho(g.nome);
+  const lista = el("ul");
+  g.arquivos.slice().sort((a, b) => {
+    const p = (x) => /\.(mp4|mov|m4v)$/i.test(x.nome) ? 0 : /^capa/i.test(x.nome) ? 1 : /legenda/i.test(x.nome) ? 3 : 2;
+    return p(a) - p(b) || a.nome.localeCompare(b.nome, "pt-BR", { numeric: true });
+  }).forEach((a) => {
+    const botoes = el("div", { class: "botoes" }, [
+      comBotaoVer && a.ver ? el("a", { class: "botao claro", href: a.ver, target: "_blank", rel: "noopener", text: "Ver" }) : null,
+      a.baixar ? el("a", { class: "botao", href: a.baixar, download: a.nome, text: "Baixar" }) : null,
+    ]);
+    lista.appendChild(el("li", {}, [
+      el("div", { class: "nome" }, [el("b", { text: rotuloArquivo(a) }), el("span", { text: a.nome + " · " + tamanho(a.tamanho) })]),
+      botoes,
+    ]));
+  });
+  return el("div", { class: "cartao" }, [
+    el("div", { class: "topo" }, [el("div", { class: "titulo", text: titulo }), data ? el("div", { class: "data", text: data }) : null]),
+    lista,
+  ]);
+}
+
+async function carregar() {
+  if (!CODIGO) { aviso("Abra esta página pelo link completo que você recebeu.", true); return; }
+  try {
+    const dados = await chamar("listar");
+    carregadoEm = Date.now();
+    const prontos = dados.grupos.filter((g) => g.pasta === "prontos");
+    const recebidos = dados.grupos.filter((g) => g.pasta === "recebidos");
+    const caixa = $("#prontos"); caixa.replaceChildren();
+    if (!prontos.length) caixa.appendChild(el("p", { class: "vazio", text: "Ainda não tem nada pronto por aqui." }));
+    prontos.forEach((g) => caixa.appendChild(cartaoDoGrupo(g, true)));
+    const rec = $("#recebidos"); rec.replaceChildren();
+    if (recebidos.length) {
+      rec.appendChild(el("h2", { text: "O que você já enviou" }));
+      recebidos.forEach((g) => rec.appendChild(cartaoDoGrupo(Object.assign({}, g, { nome: g.nome + "-enviados" }), false)));
+    }
+    $("#secao-prontos").hidden = false;
+    $("#secao-enviar").hidden = false;
+    aviso("");
+  } catch (e) {
+    aviso(/inválido/i.test(e.message)
+      ? "Este link não vale mais. Peça um link novo."
+      : "Não deu para carregar agora (" + e.message + "). Confira a internet e recarregue a página.", true);
+  }
+}
+
+function enviarUm(arquivo, link, linha) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", link.url);
+    xhr.setRequestHeader("content-type", arquivo.type || "application/octet-stream");
+    xhr.setRequestHeader("x-upsert", "false");
+    xhr.upload.onprogress = (ev) => {
+      if (ev.lengthComputable) {
+        const pct = Math.round(100 * ev.loaded / ev.total);
+        linha.barra.style.width = pct + "%";
+        linha.info.textContent = tamanho(arquivo.size) + " · " + pct + "%";
+      }
+    };
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve()
+      : reject(new Error(/maximum allowed size|too large/i.test(xhr.responseText) ? "arquivo grande demais" : "erro " + xhr.status));
+    xhr.onerror = () => reject(new Error("a conexão caiu"));
+    xhr.send(arquivo);
+  });
+}
+
+$("#arquivos").addEventListener("change", async (ev) => {
+  const arquivos = Array.from(ev.target.files || []);
+  ev.target.value = "";
+  if (!arquivos.length) return;
+  const fila = $("#fila");
+  const linhas = arquivos.map((a) => {
+    const barra = el("i"); const info = el("span", { text: tamanho(a.size) + " · aguardando" });
+    const li = el("li", {}, [el("div", { class: "nome" }, [el("b", { text: a.name }), info, el("div", { class: "barra" }, [barra])])]);
+    fila.appendChild(li);
+    return { barra, info };
+  });
+  let links;
+  try {
+    links = (await chamar("enviar_recebido", { arquivos: arquivos.map((a) => ({ nome: a.name, tamanho: a.size })) })).links;
+  } catch (e) {
+    linhas.forEach((l) => { l.info.textContent = "Não enviado: " + e.message; l.info.className = "falhou"; });
+    return;
+  }
+  for (let i = 0; i < arquivos.length; i++) {
+    try {
+      await enviarUm(arquivos[i], links[i], linhas[i]);
+      linhas[i].info.textContent = tamanho(arquivos[i].size) + " · Enviado ✓"; linhas[i].info.className = "ok";
+    } catch (e) {
+      linhas[i].info.textContent = "Não enviado (" + e.message + "). Tente de novo."; linhas[i].info.className = "falhou";
+    }
+  }
+  carregar();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && carregadoEm && Date.now() - carregadoEm > 45 * 60 * 1000) carregar();
+});
+
+carregar();
+</script>
+</body>
+</html>
